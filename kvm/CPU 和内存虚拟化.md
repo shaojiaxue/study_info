@@ -13,9 +13,8 @@ X86 操作系统是设计在直接运行在裸硬件设备上的，因此它们�
 
 3. 硬件辅助的虚拟化 
 
-![img](file:///C:/Users/Grace/AppData/Local/Temp/enhtmlclip/Image(27).png)
-
- 
+![img](https://images0.cnblogs.com/blog2015/697113/201506/011405050662145.jpg
+)
 
 ### 1.1 基于二进制翻译的全虚拟化（Full Virtualization with Binary Translation）
 
