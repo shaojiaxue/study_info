@@ -200,8 +200,6 @@ KVM 支持 SMP 和 NUMA 多CPU架构的主机和客户机。对 SMP 类型的客
 ```
 CPU 模型 （models）定义了哪些主机的 CPU 功能 （features）会被暴露给客户机操作系统。为了在具有不同 CPU 功能的主机之间做安全的迁移，qemu-kvm 往往不会将主机CPU的所有功能都暴露给客户机。其原理如下：
 
-![img](https://images201506.cnblogs.com/blog201506/697113/201506/021358040558873.jpg)
-
 你可以运行 qemu-kvm -cpu ? 命令来获取主机所支持的 CPU 模型列表。
 ```
 [root@rh65 s1]# kvm -cpu ?
