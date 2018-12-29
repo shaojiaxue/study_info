@@ -13,22 +13,19 @@ X86 操作系统是设计在直接运行在裸硬件设备上的，因此它们�
 
 3. 硬件辅助的虚拟化 
 
-![img](https://images0.cnblogs.com/blog2015/697113/201506/011405050662145.jpg
-)
+<div align=center>![img](https://images0.cnblogs.com/blog2015/697113/201506/011405050662145.jpg)
 
 ### 1.1 基于二进制翻译的全虚拟化（Full Virtualization with Binary Translation）
 
-![img](https://images0.cnblogs.com/blog2015/697113/201506/011406053161018.jpg)
+<div align=center>![img](https://images0.cnblogs.com/blog2015/697113/201506/011406053161018.jpg)
 
 客户操作系统运行在 Ring 1，它在执行特权指令时，会触发异常（CPU的机制，没权限的指令会触发异常），然后 VMM 捕获这个异常，在异常里面做翻译，模拟，最后返回到客户操作系统内，客户操作系统认为自己的特权指令工作正常，继续运行。但是这个性能损耗，就非常的大，简单的一条指令，执行完，了事，现在却要通过复杂的异常处理过程。
 
-![img](file:///C:/Users/Grace/AppData/Local/Temp/enhtmlclip/Image(28).png)
+<div align=center>![img](file:///C:/Users/Grace/AppData/Local/Temp/enhtmlclip/Image(28).png)
 
 异常 “捕获（trap）-翻译（handle）-模拟（emulate）” 过程：
 
-![img](https://images0.cnblogs.com/blog2015/697113/201506/011407133943983.jpg)
-
-![img](file:///C:/Users/Grace/AppData/Local/Temp/enhtmlclip/Image(29).png)
+<div align=center>![img](https://images0.cnblogs.com/blog2015/697113/201506/011407133943983.jpg)
 
 ### 1.2. 超虚拟化（或者半虚拟化/操作系统辅助虚拟化 Paravirtualization） 
 
@@ -36,13 +33,13 @@ X86 操作系统是设计在直接运行在裸硬件设备上的，因此它们�
 
   这种做法省去了全虚拟化中的捕获和模拟，大大提高了效率。所以像XEN这种半虚拟化技术，客户机操作系统都是有一个专门的定制内核版本，和x86、mips、arm这些内核版本等价。这样以来，就不会有捕获异常、翻译、模拟的过程了，性能损耗非常低。这就是XEN这种半虚拟化架构的优势。这也是为什么XEN只支持虚拟化Linux，无法虚拟化windows原因，微软不改代码啊。
 
-![img](https://images0.cnblogs.com/blog2015/697113/201506/011408208321118.jpg)
+<div align=center>![img](https://images0.cnblogs.com/blog2015/697113/201506/011408208321118.jpg)
 
 ### 1.3. 硬件辅助的全虚拟化 
 
 2005年后，CPU厂商Intel 和 AMD 开始支持虚拟化了。 Intel 引入了 Intel-VT （Virtualization Technology）技术。 这种 CPU，有 VMX root operation 和 VMX non-root operation两种模式，两种模式都支持Ring 0 ~ Ring 3 共 4 个运行级别。这样，VMM 可以运行在 VMX root operation模式下，客户 OS 运行在VMX non-root operation模式下。
 
-![img](https://images0.cnblogs.com/blog2015/697113/201506/011409366449146.jpg)
+<div align=center>![img](https://images0.cnblogs.com/blog2015/697113/201506/011409366449146.jpg)
 
   而且两种操作模式可以互相转换。运行在 VMX root operation 模式下的 VMM 通过显式调用 VMLAUNCH 或 VMRESUME 指令切换到 VMX non-root operation 模式，硬件自动加载 Guest OS 的上下文，于是 Guest OS 获得运行，这种转换称为 VM entry。Guest OS 运行过程中遇到需要 VMM 处理的事件，例如外部中断或缺页异常，或者主动调用 VMCALL 指令调用 VMM 的服务的时候（与系统调用类似），硬件自动挂起 Guest OS，切换到 VMX root operation 模式，恢复 VMM 的运行，这种转换称为 VM exit。VMX root operation 模式下软件的行为与在没有 VT-x 技术的处理器上的行为基本一致；而VMX non-root operation 模式则有   很大不同，最主要的区别是此时运行某些指令或遇到某些事件时，发生 VM exit。
 也就说，硬件这层就做了些区分，这样全虚拟化下，那些靠“捕获异常-翻译-模拟”的实现就不需要了。而且CPU厂商，支持虚拟化的力度越来越大，靠硬件辅助的全虚拟化技术的性能逐渐逼近半虚拟化，再加上全虚拟化不需要修改客户操作系统这一优势，全虚拟化技术应该是未来的发展趋势。
