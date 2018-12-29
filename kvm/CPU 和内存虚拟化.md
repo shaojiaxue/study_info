@@ -38,15 +38,11 @@ X86 操作系统是设计在直接运行在裸硬件设备上的，因此它们�
 
 ![img](https://images0.cnblogs.com/blog2015/697113/201506/011408208321118.jpg)
 
-![img](file:///C:/Users/Grace/AppData/Local/Temp/enhtmlclip/Image(30).png)
-
 ### 1.3. 硬件辅助的全虚拟化 
 
 2005年后，CPU厂商Intel 和 AMD 开始支持虚拟化了。 Intel 引入了 Intel-VT （Virtualization Technology）技术。 这种 CPU，有 VMX root operation 和 VMX non-root operation两种模式，两种模式都支持Ring 0 ~ Ring 3 共 4 个运行级别。这样，VMM 可以运行在 VMX root operation模式下，客户 OS 运行在VMX non-root operation模式下。
 
 ![img](https://images0.cnblogs.com/blog2015/697113/201506/011409366449146.jpg)
-
-![img](file:///C:/Users/Grace/AppData/Local/Temp/enhtmlclip/Image(31).png)
 
   而且两种操作模式可以互相转换。运行在 VMX root operation 模式下的 VMM 通过显式调用 VMLAUNCH 或 VMRESUME 指令切换到 VMX non-root operation 模式，硬件自动加载 Guest OS 的上下文，于是 Guest OS 获得运行，这种转换称为 VM entry。Guest OS 运行过程中遇到需要 VMM 处理的事件，例如外部中断或缺页异常，或者主动调用 VMCALL 指令调用 VMM 的服务的时候（与系统调用类似），硬件自动挂起 Guest OS，切换到 VMX root operation 模式，恢复 VMM 的运行，这种转换称为 VM exit。VMX root operation 模式下软件的行为与在没有 VT-x 技术的处理器上的行为基本一致；而VMX non-root operation 模式则有   很大不同，最主要的区别是此时运行某些指令或遇到某些事件时，发生 VM exit。
 也就说，硬件这层就做了些区分，这样全虚拟化下，那些靠“捕获异常-翻译-模拟”的实现就不需要了。而且CPU厂商，支持虚拟化的力度越来越大，靠硬件辅助的全虚拟化技术的性能逐渐逼近半虚拟化，再加上全虚拟化不需要修改客户操作系统这一优势，全虚拟化技术应该是未来的发展趋势。
@@ -63,7 +59,6 @@ X86 操作系统是设计在直接运行在裸硬件设备上的，因此它们�
 KVM 是基于CPU 辅助的全虚拟化方案，它需要CPU虚拟化特性的支持。
 ### 2.1. CPU 物理特性
 这个命令查看主机上的CPU 物理情况：
-[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
 ```
 [s1@rh65 ~]$ numactl --hardware
 available: 2 nodes (0-1) //2颗CPU
@@ -78,8 +73,6 @@ node   0   1
   0:  10  21 
   1:  21  10 
 ```
-
-[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
 
 要支持 KVM， Intel CPU 的 vmx 或者 AMD CPU 的 svm 扩展必须生效了：
 
@@ -97,8 +90,6 @@ flags        : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat
 - MPP 模式则是一种分布式存储器模式，能够将更多的处理器纳入一个系统的存储器。一个分布式存储器模式具有多个节点，每个节点都有自己的存储器，可以配置为SMP模式，也可以配置为非SMP模式。单个的节点相互连接起来就形成了一个总系统。MPP可以近似理解成一个SMP的横向扩展集群，MPP一般要依靠软件实现。
 - 非一致存储访问结构 (NUMA ： Non-Uniform Memory Access)：它由多个 SMP 服务器通过一定的节点互联网络进行连接，协同工作，完成相同的任务，从用户的角度来看是一个服务器系统。其基本特征是由多个 SMP 服务器 ( 每个 SMP 服务器称节点 ) 通过节点互联网络连接而成，每个节点只访问自己的本地资源 ( 内存、存储等 ) ，是一种完全无共享 (Share Nothing) 结构。
 
-详细描述可以参考 [SMP、NUMA、MPP体系结构介绍](http://www.cnblogs.com/yubo/archive/2010/04/23/1718810.html)。
-
 查看你的服务器的 CPU 架构：
 
 ```
@@ -113,11 +104,7 @@ Linux rh65 2.6.32-431.el6.x86_64 #1 SMP Sun Nov 10 22:19:54 EST 2013 x86_64 x86_
 ![img](https://images2015.cnblogs.com/blog/697113/201509/697113-20150913090819231-757181338.jpg)
 
 可见：
-
 （1）qemu-kvm 通过对 /dev/kvm 的 一系列 ICOTL 命令控制虚机，比如
-
-[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
-
 ```
 open("/dev/kvm", O_RDWR|O_LARGEFILE)    = 3
 ioctl(3, KVM_GET_API_VERSION, 0)        = 12
@@ -135,36 +122,23 @@ ioctl(3, KVM_CHECK_EXTENSION, 0)        = 1
 ioctl(4, KVM_CREATE_IRQCHIP, 0)         = 0
 ioctl(3, KVM_CHECK_EXTENSION, 0x1a)     = 0
 ```
-
-[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
-
 （2）一个 KVM 虚机即一个 Linux qemu-kvm 进程，与其他 Linux 进程一样被Linux 进程调度器调度。
-
 （3）KVM 虚机包括虚拟内存、虚拟CPU和虚机 I/O设备，其中，内存和 CPU 的虚拟化由 KVM 内核模块负责实现，I/O 设备的虚拟化由 QEMU 负责实现。
-
 （3）KVM户机系统的内存是 qumu-kvm 进程的地址空间的一部分。
-
 （4）KVM 虚机的 vCPU 作为 线程运行在 qemu-kvm 进程的上下文中。
-
 vCPU、QEMU 进程、LInux 进程调度和物理CPU之间的逻辑关系：
 
 ![img](https://images0.cnblogs.com/blog2015/697113/201506/011509285517859.jpg)
 
 #### 2.2.2 因为 CPU 中的虚拟化功能的支持，并不存在虚拟的 CPU，KVM Guest 代码是运行在物理 CPU 之上
-
-​    根据上面的 1.3 章节，支持虚拟化的 CPU 中都增加了新的功能。以 Intel VT 技术为例，它增加了两种运行模式：VMX root 模式和 VMX nonroot 模式。通常来讲，主机操作系统和 VMM 运行在 VMX root 模式中，客户机操作系统及其应用运行在 VMX nonroot 模式中。因为两个模式都支持所有的 ring，因此，客户机可以运行在它所需要的 ring 中（OS 运行在 ring 0 中，应用运行在 ring 3 中），VMM 也运行在其需要的 ring 中 （对 KVM 来说，QEMU 运行在 ring 3，KVM 运行在 ring 0）。CPU 在两种模式之间的切换称为 VMX 切换。从 root mode 进入 nonroot mode，称为 VM entry；从 nonroot mode 进入 root mode，称为 VM exit。可见，CPU 受控制地在两种模式之间切换，轮流执行 VMM 代码和 Guest OS 代码。
-
+   支持虚拟化的 CPU 中都增加了新的功能。以 Intel VT 技术为例，它增加了两种运行模式：VMX root 模式和 VMX nonroot 模式。通常来讲，主机操作系统和 VMM 运行在 VMX root 模式中，客户机操作系统及其应用运行在 VMX nonroot 模式中。因为两个模式都支持所有的 ring，因此，客户机可以运行在它所需要的 ring 中（OS 运行在 ring 0 中，应用运行在 ring 3 中），VMM 也运行在其需要的 ring 中 （对 KVM 来说，QEMU 运行在 ring 3，KVM 运行在 ring 0）。CPU 在两种模式之间的切换称为 VMX 切换。从 root mode 进入 nonroot mode，称为 VM entry；从 nonroot mode 进入 root mode，称为 VM exit。可见，CPU 受控制地在两种模式之间切换，轮流执行 VMM 代码和 Guest OS 代码。
   对 KVM 虚机来说，运行在 VMX Root Mode 下的 VMM 在需要执行 Guest OS 指令时执行 VMLAUNCH 指令将 CPU 转换到 VMX non-root mode，开始执行客户机代码，即 VM entry 过程；在 Guest OS 需要退出该 mode 时，CPU 自动切换到 VMX Root mode，即 VM exit 过程。可见，KVM 客户机代码是受 VMM 控制直接运行在物理 CPU 上的。QEMU 只是通过 KVM 控制虚机的代码被 CPU 执行，但是它们本身并不执行其代码。也就是说，CPU 并没有真正的被虚级化成虚拟的 CPU 给客户机使用。
-
- [这篇文章](http://frankdenneman.nl/2013/09/18/vcpu-configuration-performance-impact-between-virtual-sockets-and-virtual-cores/) 是关于 vSphere 中 CPU 虚拟化的，我觉得它和 KVM CPU 虚拟化存在很大的一致。下图是使用 2 socket 2 core 共 4 个 vCPU 的情形：
-
+  
+下图是使用 2 socket 2 core 共 4 个 vCPU 的情形：
 ![img](https://images2015.cnblogs.com/blog/697113/201509/697113-20150915144822773-366209755.jpg)
-
    几个概念：socket （颗，CPU 的物理单位），core （核，每个 CPU 中的物理内核），thread （超线程，通常来说，一个 CPU core 只提供一个 thread，这时客户机就只看到一个 CPU；但是，超线程技术实现了 CPU 核的虚拟化，一个核被虚拟化出多个逻辑 CPU，可以同时运行多个线程）。 
-
   上图分三层，他们分别是是VM层，VMKernel层和物理层。对于物理服务器而言，所有的CPU资源都分配给单独的操作系统和上面运行的应用。应用将请求先发送给操作系统，然后操作系统调度物理的CPU资源。在虚拟化平台比如 KVM 中，在VM层和物理层之间加入了VMkernel层，从而允许所有的VM共享物理层的资源。VM上的应用将请求发送给VM上的操作系统，然后操纵系统调度Virtual CPU资源（操作系统认为Virtual CPU和物理 CPU是一样的），然后VMkernel层对多个物理CPU Core进行资源调度，从而满足Virtual CPU的需要。在虚拟化平台中OS CPU Scheduler和Hyperviisor CPU Scheduler都在各自的领域内进行资源调度。 
-
-   KVM 中，可以指定 socket，core 和 thread 的数目，比如 设置 “-smp 5,sockets=5,cores=1,threads=1”，则 vCPU 的数目为 5*1*1 = 5。客户机看到的是基于 KVM vCPU 的 CPU 核，而 vCPU 作为 QEMU 线程被 Linux 作为普通的线程/轻量级进程调度到物理的 CPU 核上。至于你是该使用多 socket 和 多core，[这篇文章](http://frankdenneman.nl/2013/09/18/vcpu-configuration-performance-impact-between-virtual-sockets-and-virtual-cores/) 有仔细的分析，其结论是在 VMware ESXi 上，性能没什么区别，只是某些客户机操作系统会限制物理 CPU 的数目，这种情况下，可以使用少 socket 多 core。
+   KVM 中，可以指定 socket，core 和 thread 的数目，比如 设置 “-smp 5,sockets=5,cores=1,threads=1”，则 vCPU 的数目为 5*1*1 = 5。客户机看到的是基于 KVM vCPU 的 CPU 核，而 vCPU 作为 QEMU 线程被 Linux 作为普通的线程/轻量级进程调度到物理的 CPU 核上。
 
 #### 2.2.3 客户机系统的代码是如何运行的
 
@@ -184,11 +158,7 @@ KVM 内核模块作为 User mode 和 Guest mode 之间的桥梁：
 - User 模式：代表客户机系统执行 I/O 操作
 
 ![img](https://images2015.cnblogs.com/blog/697113/201509/697113-20150913103334731-1698421672.jpg)
-
-([来源](http://www.cnblogs.com/popsuper1982/p/3815398.html))
-
 QEMU-KVM 相比原生 QEMU 的改动：
-
 - 原生的 QEMU 通过指令翻译实现 CPU 的完全虚拟化，但是修改后的 QEMU-KVM 会调用 ICOTL 命令来调用 KVM 模块。
 - 原生的 QEMU 是单线程实现，QEMU-KVM 是多线程实现。
 
@@ -197,19 +167,6 @@ QEMU-KVM 相比原生 QEMU 的改动：
 - I/O 线程用于管理模拟设备
 - vCPU 线程用于运行 Guest 代码
 - 其它线程，比如处理 event loop，offloaded tasks 等的线程
-
-在我的测试环境中（RedHata Linux 作 Hypervisor）：
-
-| smp 设置的值 | 线程数 | 线程                                                 |
-| ------------ | ------ | ---------------------------------------------------- |
-| 4            | 8      | 1 个主线程（I/O 线程）、4 个 vCPU 线程、3 个其它线程 |
-| 6            | 10     | 1 个主线程（I/O 线程）、6 个 vCPU 线程、3 个其它线程 |
-
-[这篇文章](http://blog.chinaunix.net/uid-26000137-id-3761114.html) 谈谈了这些线程的情况。
-
-![img](https://images2015.cnblogs.com/blog/697113/201509/697113-20150913104025450-1757886147.jpg)
-
-([来源](http://www.cnblogs.com/popsuper1982/p/3815398.html))
 
 | 客户机代码执行（客户机线程） | I/O 线程                        | 非 I/O 线程                     |
 | ---------------------------- | ------------------------------- | ------------------------------- |
@@ -223,46 +180,29 @@ QEMU-KVM 相比原生 QEMU 的改动：
 1. 客户机线程调度到客户机物理CPU 即 KVM vCPU，该调度由客户机操作系统负责，每个客户机操作系统的实现方式不同。在 KVM 上，vCPU 在客户机系统看起来就像是物理 CPU，因此其调度方法也没有什么不同。
 2. vCPU 线程调度到物理 CPU 即主机物理 CPU，该调度由 Hypervisor 即 Linux 负责。
 
-​    KVM 使用标准的 Linux 进程调度方法来调度 vCPU 进程。Linux 系统中，线程和进程的区别是 进程有独立的内核空间，线程是代码的执行单位，也就是调度的基本单位。Linux 中，线程是就是轻量级的进程，也就是共享了部分资源(地址空间、文件句柄、信号量等等)的进程，所以线程也按照进程的调度方式来进行调度。
+   KVM 使用标准的 Linux 进程调度方法来调度 vCPU 进程。Linux 系统中，线程和进程的区别是 进程有独立的内核空间，线程是代码的执行单位，也就是调度的基本单位。Linux 中，线程是就是轻量级的进程，也就是共享了部分资源(地址空间、文件句柄、信号量等等)的进程，所以线程也按照进程的调度方式来进行调度。
 
-（1）Linux 进程调度原理可以参考 [这篇文章](http://criticalblue.com/news/wp-content/uploads/2013/12/linux_scheduler_notes_final.pdf) 和 [这篇文章](http://www.cnblogs.com/zhaoyl/archive/2012/09/04/2671156.html)。通常情况下，在SMP系统中，Linux内核的进程调度器根据自有的调度策略将系统中的一个可运行（runable）进程调度到某个CPU上执行。下面是 Linux 进程的状态机：
+（1）通常情况下，在SMP系统中，Linux内核的进程调度器根据自有的调度策略将系统中的一个可运行（runable）进程调度到某个CPU上执行。下面是 Linux 进程的状态机：
 
 ![img](https://images2015.cnblogs.com/blog/697113/201509/697113-20150913104951106-1477750383.jpg)
 
-（2）处理器亲和性：可以设置 vCPU 在指定的物理 CPU 上运行，具体可以参考[这篇文章](http://blog.chinaunix.net/uid-26000137-id-3695749.html) 和 [这篇文章](http://frankdenneman.nl/2011/01/11/beating-a-dead-horse-using-cpu-affinity/)。
-
+（2）处理器亲和性：可以设置 vCPU 在指定的物理 CPU 上运行
 ​    根据 Linux 进程调度策略，可以看出，在 Linux 主机上运行的 KVM 客户机 的总 vCPU 数目最好是不要超过物理 CPU 内核数，否则，会出现线程间的 CPU 内核资源竞争，导致有虚机因为 vCPU 进程等待而导致速度很慢。
-
-关于这两次调度，业界有很多的研究，比如上海交大的论文 [Schedule Processes, not VCPUs](http://ipads.se.sjtu.edu.cn/_media/publications/vcpu-bal-apsys13.pdf) 提出动态地减少 vCPU 的数目即减少第二次调度。
-
-另外，[这篇文章](http://www.vmware.com/files/pdf/techpaper/VMware-vSphere-CPU-Sched-Perf.pdf) 谈到的是 vSphere CPU 的调度方式，有空的时候可以研究下并和 KVM vCPU 的调度方式进行比较。
-
 ### 2.3 客户机CPU结构和模型
 
 KVM 支持 SMP 和 NUMA 多CPU架构的主机和客户机。对 SMP 类型的客户机，使用 “-smp”参数：
-
 ```
 -smp <n>[,cores=<ncores>][,threads=<nthreads>][,sockets=<nsocks>][,maxcpus=<maxcpus>]
 ```
-
 对 NUMA 类型的客户机，使用 “-numa”参数：
-
 ```
 -numa <nodes>[,mem=<size>][,cpus=<cpu[-cpu>]][,nodeid=<node>] 
 ```
-
- 
-
 CPU 模型 （models）定义了哪些主机的 CPU 功能 （features）会被暴露给客户机操作系统。为了在具有不同 CPU 功能的主机之间做安全的迁移，qemu-kvm 往往不会将主机CPU的所有功能都暴露给客户机。其原理如下：
 
 ![img](https://images201506.cnblogs.com/blog201506/697113/201506/021358040558873.jpg)
 
- 
-
 你可以运行 qemu-kvm -cpu ? 命令来获取主机所支持的 CPU 模型列表。
-
-[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
-
 ```
 [root@rh65 s1]# kvm -cpu ?
 x86       Opteron_G5  AMD Opteron 63xx class CPU                      
@@ -298,21 +238,14 @@ Recognized CPUID flags:
   extf_ecx: perfctr_nb perfctr_core topoext tbm nodeid_msr tce fma4 lwp wdt skinit xop ibs osvw 3dnowprefetch misalignsse sse4a abm cr8legacy extapic svm cmp_legacy lahf_lm
 [root@rh65 s1]# 
 ```
-
-[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
-
-​    每个 Hypervisor 都有自己的策略，来定义默认上哪些CPU功能会被暴露给客户机。至于哪些功能会被暴露给客户机系统，取决于客户机的配置。qemu32 和 qemu64 是基本的客户机 CPU 模型，但是还有其他的模型可以使用。你可以使用 qemu-kvm 命令的 -cpu <model> 参数来指定客户机的 CPU 模型，还可以附加指定的 CPU 特性。"-cpu" 会将该指定 CPU 模型的所有功能全部暴露给客户机，即使某些特性在主机的物理CPU上不支持，这时候QEMU/KVM 会模拟这些特性，因此，这时候也许会出现一定的性能下降。 
+   每个 Hypervisor 都有自己的策略，来定义默认上哪些CPU功能会被暴露给客户机。至于哪些功能会被暴露给客户机系统，取决于客户机的配置。qemu32 和 qemu64 是基本的客户机 CPU 模型，但是还有其他的模型可以使用。你可以使用 qemu-kvm 命令的 -cpu <model> 参数来指定客户机的 CPU 模型，还可以附加指定的 CPU 特性。"-cpu" 会将该指定 CPU 模型的所有功能全部暴露给客户机，即使某些特性在主机的物理CPU上不支持，这时候QEMU/KVM 会模拟这些特性，因此，这时候也许会出现一定的性能下降。 
 
 RedHat Linux 6 上使用默认的 cpu64-rhe16 作为客户机 CPU model：
-
 ![img](https://images201506.cnblogs.com/blog201506/697113/201506/021504207586046.jpg)
-
 你可以指定特定的 CPU model 和 feature：
-
 ```
 qemu-kvm -cpu Nehalem,+aes
 ```
-
  ![img](https://images0.cnblogs.com/blog2015/697113/201506/021659499307313.jpg)
 
 你也可以直接使用 -cpu host，这样的话会客户机使用和主机相同的 CPU model。
@@ -322,8 +255,6 @@ qemu-kvm -cpu Nehalem,+aes
 1. 不是客户机的 vCPU 越多，其性能就越好，因为线程切换会耗费大量的时间；应该根据负载需要分配最少的 vCPU。
 2. 主机上的客户机的 vCPU 总数不应该超过物理 CPU 内核总数。不超过的话，就不存在 CPU 竞争，每个 vCPU 线程在一个物理 CPU 核上被执行；超过的话，会出现部分线程等待 CPU 以及一个 CPU 核上的线程之间的切换，这会有 overhead。
 3. 将负载分为计算负载和 I/O 负载，对计算负载，需要分配较多的 vCPU，甚至考虑 CPU 亲和性，将指定的物理 CPU 核分给给这些客户机。
-
-这篇文章 （<http://my.oschina.net/chape/blog/173981>） 介绍了一些指导性方法，摘要如下：
 
 我们来假设一个主机有 2 个socket，每个 socket 有 4 个core。主频2.4G MHZ 那么一共可用的资源是 2*4*2.4G= 19.2G MHZ。假设主机上运行了三个VM，VM1和VM2设置为1socket*1core，VM3设置为1socket*2core。那么VM1和VM2分别有1个vCPU，而VM3有2个vCPU。假设其他设置为缺省设置。
 
@@ -357,30 +288,15 @@ qemu-kvm -cpu Nehalem,+aes
 
 ​    除了 CPU 虚拟化，另一个关键是内存虚拟化，通过内存虚拟化共享物理系统内存，动态分配给虚拟机。虚拟机的内存虚拟化很象现在的操作系统支持的虚拟内存方式，应用程序看到邻近的内存地址空间，这个地址空间无需和下面的物理机器内存直接对应，操作系统保持着虚拟页到物理页的映射。现在所有的 x86 CPU 都包括了一个称为内存管理的模块MMU（Memory Management Unit）和 TLB(Translation Lookaside Buffer)，通过MMU和TLB来优化虚拟内存的性能。
 
- 
-
    KVM 实现客户机内存的方式是，利用mmap系统调用，在QEMU主线程的虚拟地址空间中申明一段连续的大小的空间用于客户机物理内存映射。
 
 ![img](https://images2015.cnblogs.com/blog/697113/201509/697113-20150915141926742-1526227034.jpg)
-
- 
-
-（[图片来源](http://blog.csdn.net/lux_veritas/article/details/9383643) HVA 同下面的 MA，GPA 同下面的 PA，GVA 同下面的 VA）
-
- 
 
 在有两个虚机的情况下，情形是这样的：
 
 ![img](https://images0.cnblogs.com/blog2015/697113/201506/011413028483143.jpg)
 
- 
-
- 
-
 可见，KVM 为了在一台机器上运行多个虚拟机，需要增加一个新的内存虚拟化层，也就是说，必须虚拟 MMU 来支持客户操作系统，来实现 VA -> PA -> MA 的翻译。客户操作系统继续控制虚拟地址到客户内存物理地址的映射 （VA -> PA），但是客户操作系统不能直接访问实际机器内存，因此VMM 需要负责映射客户物理内存到实际机器内存 （PA -> MA）。
-
- 
-
 VMM 内存虚拟化的实现方式：
 
 - 软件方式：通过软件实现内存地址的翻译，比如 Shadow page table （影子页表）技术
@@ -388,13 +304,7 @@ VMM 内存虚拟化的实现方式：
 
 影子页表技术：
 
- 
-
 ![img](https://images0.cnblogs.com/blog2015/697113/201506/011415310351681.jpg)
-
- 
-
- 
 
 ### 2.2 KVM 内存虚拟化
 
