@@ -136,6 +136,7 @@ vCPU、QEMU 进程、LInux 进程调度和物理CPU之间的逻辑关系：
   
 下图是使用 2 socket 2 core 共 4 个 vCPU 的情形：
 ![img](https://images2015.cnblogs.com/blog/697113/201509/697113-20150915144822773-366209755.jpg)
+
    几个概念：socket （颗，CPU 的物理单位），core （核，每个 CPU 中的物理内核），thread （超线程，通常来说，一个 CPU core 只提供一个 thread，这时客户机就只看到一个 CPU；但是，超线程技术实现了 CPU 核的虚拟化，一个核被虚拟化出多个逻辑 CPU，可以同时运行多个线程）。 
   上图分三层，他们分别是是VM层，VMKernel层和物理层。对于物理服务器而言，所有的CPU资源都分配给单独的操作系统和上面运行的应用。应用将请求先发送给操作系统，然后操作系统调度物理的CPU资源。在虚拟化平台比如 KVM 中，在VM层和物理层之间加入了VMkernel层，从而允许所有的VM共享物理层的资源。VM上的应用将请求发送给VM上的操作系统，然后操纵系统调度Virtual CPU资源（操作系统认为Virtual CPU和物理 CPU是一样的），然后VMkernel层对多个物理CPU Core进行资源调度，从而满足Virtual CPU的需要。在虚拟化平台中OS CPU Scheduler和Hyperviisor CPU Scheduler都在各自的领域内进行资源调度。 
    KVM 中，可以指定 socket，core 和 thread 的数目，比如 设置 “-smp 5,sockets=5,cores=1,threads=1”，则 vCPU 的数目为 5*1*1 = 5。客户机看到的是基于 KVM vCPU 的 CPU 核，而 vCPU 作为 QEMU 线程被 Linux 作为普通的线程/轻量级进程调度到物理的 CPU 核上。
